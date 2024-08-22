@@ -1,0 +1,1 @@
+# paralell-stocks-bot
