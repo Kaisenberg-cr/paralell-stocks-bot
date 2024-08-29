@@ -1,8 +1,10 @@
 import asyncio
 import json
+import os
 import time
 
 import pyppeteer
+from dotenv import load_dotenv
 from openpyxl import load_workbook
 
 from libs.files_and_folders_utils import files_and_folders
@@ -27,10 +29,11 @@ class StocksBot:
             print(f"Error decoding JSON from the file: {json_file_path}")
             return
 
-        # variables read from json config file
+        # Read variables from .env file
+        self.login_email = os.getenv("login_email")
+        self.login_password = os.getenv("login_password")
+        # Read variables from config.json file
         self.file_name = data.get("file_name")
-        self.login_email = data.get("login_email")
-        self.login_password = data.get("login_password")
         chrome_executable_path = data.get("chrome_executable_path")
 
         # set the custom exception handler for the event loop
@@ -284,6 +287,8 @@ class StocksBot:
 
 
 if __name__ == "__main__":
+    # Load environment variables from .env file
+    load_dotenv()
     json_file_path = "C:\\stocks_bot\\config.json"
     start_time = time.perf_counter()
     bot = StocksBot(json_file_path)
