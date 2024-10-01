@@ -1,14 +1,20 @@
 import asyncio
 import json
 import os
+import threading
 import time
+from multiprocessing import Process, Queue
 
+import nest_asyncio
 import pyppeteer
 from dotenv import load_dotenv
 from openpyxl import load_workbook
 
 from libs.files_and_folders_utils import files_and_folders
 from libs.pyppeteer_class import pyppeteer_extension
+
+# Aplica nest_asyncio para permitir bucles de eventos anidados
+nest_asyncio.apply()
 
 
 class StocksBot:
@@ -28,37 +34,16 @@ class StocksBot:
         except json.JSONDecodeError:
             print(f"Error decoding JSON from the file: {json_file_path}")
             return
-
         # Read variables from .env file
         self.login_email = os.getenv("login_email")
         self.login_password = os.getenv("login_password")
         # Read variables from config.json file
         self.file_name = data.get("file_name")
-        chrome_executable_path = data.get("chrome_executable_path")
-
-        # set the custom exception handler for the event loop
-        loop = asyncio.get_event_loop()
-        loop.set_exception_handler(self.custom_exception_handler)
+        self.chrome_executable_path = data.get("chrome_executable_path")
 
         # set up log file
         self.utils = files_and_folders(data, "StocksBot")
 
-        # Set pyppeteer to use the custom event loop
-        try:
-            self.browser = loop.run_until_complete(
-                pyppeteer.launch(
-                    headless=False,
-                    executablePath=chrome_executable_path,
-                    args=["--start-maximized"],
-                )
-            )
-        except pyppeteer.errors.BrowserError as e:
-            print(f"Error launching browser: {e}")
-            return
-
-        self.pyppeteer_extensions = pyppeteer_extension(
-            self.browser, self.utils.log_file_path
-        )
         self.start_automation()
 
     def custom_exception_handler(self, loop, context):
@@ -85,10 +70,11 @@ class StocksBot:
             self.pyppeteer_extensions.set_text(
                 '//input[@type="email"]', self.login_email
             )
-            time.sleep(0.5)
+            time.sleep(2)
             self.pyppeteer_extensions.set_text(
                 '//input[@name="password"]', self.login_password
             )
+            time.sleep(2)
             self.pyppeteer_extensions.click('//label[text()="Sign in"]')
             self.pyppeteer_extensions.wait_for_element(
                 '//div[text()="Search for a name, ticker, or function "]'
@@ -108,16 +94,55 @@ class StocksBot:
             print("No tickers found.")
             return
 
-        login_success = self.login()
-        if not login_success:
-            return
+        processes = []
+        queue = Queue()
+        for i, ticker in enumerate(tickers_list):
+            process = Process(
+                target=self.parallel_process, args=(ticker, char + i, queue)
+            )
+            processes.append(process)
+            process.start()
 
-        for ticker in tickers_list:
-            try:
-                self.collect_and_write_data(ticker, char)
-                char += 1
-            except Exception as e:
-                print(f"Error processing ticker {ticker}: {e}")
+        for process in processes:
+            process.join()
+
+        while not queue.empty():
+            ticker, error = queue.get()
+            if error:
+                print(f"Error processing ticker {ticker}: {error}")
+
+    def parallel_process(self, ticker, char, queue):
+        try:
+            # Crear un nuevo bucle de eventos para el proceso
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            # Set pyppeteer to use the custom event loop
+            loop.set_exception_handler(self.custom_exception_handler)
+            self.browser = loop.run_until_complete(
+                pyppeteer.launch(
+                    headless=False,
+                    executablePath=self.chrome_executable_path,
+                    args=["--start-maximized"],
+                )
+            )
+            self.pyppeteer_extensions = pyppeteer_extension(
+                self.browser, self.utils.log_file_path
+            )
+
+            login_success = self.login()
+            if not login_success:
+                queue.put((ticker, "Login failed"))
+                return
+
+            self.collect_and_write_data(ticker, char)
+            queue.put((ticker, None))
+        except Exception as e:
+            queue.put((ticker, str(e)))
+        finally:
+            # Cerrar el navegador antes de cerrar el bucle de eventos
+            loop.run_until_complete(self.browser.close())
+            loop.close()
 
     def collect_and_write_data(self, ticker, char):
         """
@@ -203,18 +228,22 @@ class StocksBot:
             '(//div[text()="Total Liabilities / Total Assets"]/parent::div/parent::div/parent::div/parent::div/div)[44]'
         )
         time.sleep(3)
-        self.write_to_excel(
-            char,
-            pe_ratio,
-            pb_ratio,
-            stock_price,
-            current_ratio,
-            return_on_equity,
-            asset_turnover,
-            eps_current_fiscal_year,
-            eps_last_fiscal_year,
-            total_liabilities_total_assets,
-        )
+
+        # Crear un lock dentro del proceso hijo
+        lock = threading.Lock()
+        with lock:
+            self.write_to_excel(
+                char,
+                pe_ratio,
+                pb_ratio,
+                stock_price,
+                current_ratio,
+                return_on_equity,
+                asset_turnover,
+                eps_current_fiscal_year,
+                eps_last_fiscal_year,
+                total_liabilities_total_assets,
+            )
 
     def write_to_excel(
         self,
@@ -239,7 +268,7 @@ class StocksBot:
             stock_price (str): The stock price.
             current_ratio (str): The current ratio.
             return_on_equity (str): The return on equity.
-            asset_turnover (str): The asset turnover.
+            asset turnover (str): The asset turnover.
             eps_current_fiscal_year (str): The EPS for the current fiscal year.
             eps_last_fiscal_year (str): The EPS for the last fiscal year.
             total_liabilities_total_assets (str): The total liabilities to total assets ratio.
