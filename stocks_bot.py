@@ -289,7 +289,7 @@ class StocksBot:
 if __name__ == "__main__":
     # Load environment variables from .env file
     load_dotenv()
-    json_file_path = "C:\\stocks_bot\\config.json"
+    json_file_path = "C:\\Users\\wendy\\OneDrive\\Desktop\\parallel-stocks-bot\\config.json"
     start_time = time.perf_counter()
     bot = StocksBot(json_file_path)
     end_time = time.perf_counter()
