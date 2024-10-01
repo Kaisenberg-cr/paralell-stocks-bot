@@ -169,10 +169,10 @@ class StocksBot:
         time.sleep(1)
         self.pyppeteer_extensions.click('//div[text()="Profitability"]')
         self.pyppeteer_extensions.wait_for_element(
-            '(//div[text()="Current Ratio"]/parent::div/parent::div/parent::div/parent::div/div)[12]/div/div/div'
+            '(//div[text()="Current Ratio"]/parent::div/parent::div/parent::div/parent::div/div)[33]'
         )
         current_ratio = self.pyppeteer_extensions.get_text(
-            '(//div[text()="Current Ratio"]/parent::div/parent::div/parent::div/parent::div/div)[12]/div/div/div'
+            '(//div[text()="Current Ratio"]/parent::div/parent::div/parent::div/parent::div/div)[33]'
         )
         time.sleep(1)
         return_on_equity = self.pyppeteer_extensions.get_text(
@@ -185,22 +185,22 @@ class StocksBot:
         time.sleep(1)
         self.pyppeteer_extensions.click('//span[text()="Highlights"]')
         self.pyppeteer_extensions.wait_for_element(
-            '(//div[text()="Diluted EPS"]/parent::div/parent::div/parent::div/parent::div/div)[12]/div/div/div'
+            '(//div[text()="Diluted EPS"]/parent::div/parent::div/parent::div/parent::div/div)[44]'
         )
         eps_current_fiscal_year = self.pyppeteer_extensions.get_text(
-            '(//div[text()="Diluted EPS"]/parent::div/parent::div/parent::div/parent::div/div)[12]/div/div/div'
+            '(//div[text()="Diluted EPS"]/parent::div/parent::div/parent::div/parent::div/div)[44]'
         )
         time.sleep(1)
         eps_last_fiscal_year = self.pyppeteer_extensions.get_text(
-            '(//div[text()="Diluted EPS"]/parent::div/parent::div/parent::div/parent::div/div)[11]/div/div/div'
+            '(//div[text()="Diluted EPS"]/parent::div/parent::div/parent::div/parent::div/div)[43]'
         )
         time.sleep(2)
         self.pyppeteer_extensions.click('//span[text()="Solvency"]')
         self.pyppeteer_extensions.wait_for_element(
-            '(//div[text()="Total Liabilities / Total Assets"]/parent::div/parent::div/parent::div/parent::div/div)[12]/div/div/div'
+            '(//div[text()="Total Liabilities / Total Assets"]/parent::div/parent::div/parent::div/parent::div/div)[44]'
         )
         total_liabilities_total_assets = self.pyppeteer_extensions.get_text(
-            '(//div[text()="Total Liabilities / Total Assets"]/parent::div/parent::div/parent::div/parent::div/div)[12]/div/div/div'
+            '(//div[text()="Total Liabilities / Total Assets"]/parent::div/parent::div/parent::div/parent::div/div)[44]'
         )
         time.sleep(3)
         self.write_to_excel(
