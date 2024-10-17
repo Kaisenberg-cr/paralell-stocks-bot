@@ -1,20 +1,15 @@
 import asyncio
 import json
 import os
-import threading
 import time
-from multiprocessing import Process, Queue
+from multiprocessing import Lock, Process, Queue
 
-import nest_asyncio
 import pyppeteer
 from dotenv import load_dotenv
 from openpyxl import load_workbook
 
 from libs.files_and_folders_utils import files_and_folders
 from libs.pyppeteer_class import pyppeteer_extension
-
-# Aplica nest_asyncio para permitir bucles de eventos anidados
-nest_asyncio.apply()
 
 
 class StocksBot:
@@ -312,7 +307,7 @@ class StocksBot:
             else total_liabilities_total_assets
         )
         # Crear un lock dentro del proceso hijo
-        lock = threading.Lock()
+        lock = Lock()
         with lock:
             # Write the data to the Excel file
             self.write_to_excel(
