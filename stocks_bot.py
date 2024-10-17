@@ -1,33 +1,42 @@
-#----------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------
 
 # Módulo para trabajar con programación asíncrona.
 import asyncio
+
 # Módulo para trabajar con datos en formato JSON.
 import json
+
 # Módulo para interactuar con el sistema operativo.
 import os
+
 # Módulo que proporciona funciones relacionadas con el manejo del tiempo.
 import time
+
 # Biblioteca utilizada para controlar un navegador web.
 import pyppeteer
+
 # Función que carga variables de entorno desde un archivo en el entorno de ejecución.
 from dotenv import load_dotenv
- # Función de la biblioteca OpenPyXL para trabajar con archivos Excel.
 from openpyxl import load_workbook
-
-#----------------------------------------------------------------------------------------------
 
 # Importa una utilidad personalizada para gestionar archivos y carpetas desde una biblioteca local o interna.
 from libs.files_and_folders_utils import files_and_folders
+
 # Importa una clase o extensión personalizada para Pyppeteer desde una biblioteca interna.
 from libs.pyppeteer_class import pyppeteer_extension
 
-#----------------------------------------------------------------------------------------------
+# Función de la biblioteca OpenPyXL para trabajar con archivos Excel.
+
+# ----------------------------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------------------------
+
 
 # Clase que representa un bot para interactuar con la aplicación Koyfin, permitiendo automatizar tareas relacionadas con el análisis de acciones y datos financieros.
 class StocksBot:
 
-#----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __init__(self, json_file_path):
         try:
@@ -73,7 +82,7 @@ class StocksBot:
             print(f"Error launching browser: {e}")
             return
 
-         # Inicializa la extensión de Pyppeteer, pasando el navegador y la ruta del archivo de registro.
+        # Inicializa la extensión de Pyppeteer, pasando el navegador y la ruta del archivo de registro.
         self.pyppeteer_extensions = pyppeteer_extension(
             self.browser, self.utils.log_file_path
         )
@@ -81,14 +90,14 @@ class StocksBot:
         # Llama al método `start_automation` para comenzar el proceso de automatización.
         self.start_automation()
 
-#----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def custom_exception_handler(self, loop, context):
         # Muestra un mensaje personalizado cuando ocurre una excepción dentro del bucle de eventos asíncrono.
         print(f"Exception in event loop: {context['message']}")
 
-#----------------------------------------------------------------------------------------------
-    
+    # ----------------------------------------------------------------------------------------------
+
     def login(self):
         try:
             # Abre la página de inicio de sesión de Koyfin y espera a que el campo de email esté presente.
@@ -129,7 +138,7 @@ class StocksBot:
             print(f"Login failed: {e}")
             return False
 
-#----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def start_automation(self):
         # Inicializa la variable `char` con el valor ASCII correspondiente a la letra 'C'.
@@ -164,7 +173,7 @@ class StocksBot:
                 # Captura y muestra un mensaje de error si ocurre un problema al procesar el ticker.
                 print(f"Error processing ticker {ticker}: {e}")
 
-#----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def collect_and_write_data(self, ticker, char):
         pe_ratio = ""
@@ -410,7 +419,7 @@ class StocksBot:
             total_liabilities_total_assets,
         )
 
-#----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     """
     self,
@@ -425,6 +434,7 @@ class StocksBot:
     eps_last_fiscal_year,  # Ganancias por acción (EPS) del año fiscal anterior.
     total_liabilities_total_assets,  # Proporción de pasivos totales sobre activos totales, que mide la solvencia de la empresa.
     """
+
     def write_to_excel(
         self,
         char,
@@ -455,7 +465,7 @@ class StocksBot:
             # EPS del año anterior.
             sheet[column + "4"] = eps_last_fiscal_year
 
-             # EPS del año actual.
+            # EPS del año actual.
             sheet[column + "5"] = eps_current_fiscal_year
 
             # Relación P/B.
@@ -482,7 +492,7 @@ class StocksBot:
             # Captura y muestra un mensaje de error si ocurre un problema al escribir en el archivo de Excel.
             print(f"Error writing to Excel file: {e}")
 
-#----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def get_ticker_list(self):
         try:
@@ -511,7 +521,8 @@ class StocksBot:
             print(f"Error reading Excel file: {e}")
             return []
 
-#----------------------------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------------------------
 
 # Verifica si el script se está ejecutando directamente (no importado como un módulo).
 if __name__ == "__main__":
